@@ -1,79 +1,67 @@
-const API_URL = "http://localhost:3000/api/users";
+import UserService from "./UserService.js";
 
-async function fetchUsers() {
-  try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("Failed to load users.");
-    const users = await res.json();
-    document.getElementById("users").innerHTML = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${users
-                      .map(
-                        (user) =>
-                          `<tr>
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                            <td><button class='delete-button' onclick='deleteUser("${user.uuid}")'>🗑️</button></td>
-                        </tr>`,
-                      )
-                      .join("")}
-                </tbody>
-            </table>`;
-  } catch (error) {
-    document.getElementById("message").textContent =
-      "Error: Unable to fetch users.";
-  }
+async function renderUsers() {
+  const users = await UserService.fetchUsers();
+  const usersTable = document.getElementById("users");
+
+  usersTable.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${users
+                  .map(
+                    (user) =>
+                      `<tr data-id="${user.uuid}">
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><button class='delete-button'>🗑️</button></td>
+                    </tr>`,
+                  )
+                  .join("")}
+            </tbody>
+        </table>`;
+
+  // Attach event listeners to delete buttons
+  document.querySelectorAll(".delete-button").forEach((button) => {
+    button.addEventListener("click", async function () {
+      const userRow = this.closest("tr");
+      const userId = userRow.dataset.id;
+      await handleDeleteUser(userId);
+    });
+  });
 }
 
-async function addUser(event) {
+async function handleAddUser(event) {
   event.preventDefault();
   const name = document.getElementById("name").value;
   const email = document.getElementById("email").value;
   const messageDiv = document.getElementById("message");
 
   try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to add user");
-    }
-
+    await UserService.addUser(name, email);
     messageDiv.style.color = "green";
     messageDiv.textContent = "User added successfully!";
-    fetchUsers();
+    renderUsers();
   } catch (error) {
     messageDiv.style.color = "red";
     messageDiv.textContent = error.message;
   }
 }
 
-async function deleteUser(uuid) {
+async function handleDeleteUser(uuid) {
   try {
-    const response = await fetch(`${API_URL}/${uuid}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to delete user");
-    }
-    fetchUsers();
+    await UserService.deleteUser(uuid);
+    renderUsers(); // Refresh user list after deletion
   } catch (error) {
     document.getElementById("message").textContent = "Error: " + error.message;
   }
 }
 
-document.getElementById("userForm").addEventListener("submit", addUser);
-fetchUsers();
+document.getElementById("userForm").addEventListener("submit", handleAddUser);
+renderUsers();
