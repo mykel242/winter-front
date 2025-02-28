@@ -7,7 +7,11 @@ body {
     margin-top: 20px;
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
+    table-layout: auto;
+    overflow-x: auto;
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
 }
 
 #users th,
@@ -15,7 +19,6 @@ body {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: left;
-    white-space: nowrap;
 }
 
 #users th {
@@ -28,6 +31,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 button {
