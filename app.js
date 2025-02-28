@@ -1,16 +1,31 @@
 import UserService from "./UserService.js";
 
+async function checkBackendHealth() {
+  try {
+    const response = await fetch("http://localhost:3000/test");
+    if (!response.ok) throw new Error("Backend is unreachable");
+
+    document.getElementById("backend-status").textContent =
+      "✅ Backend is online";
+    document.getElementById("backend-status").style.color = "green";
+  } catch (error) {
+    document.getElementById("backend-status").textContent =
+      "❌ Backend is offline";
+    document.getElementById("backend-status").style.color = "red";
+  }
+}
+
 async function renderUsers() {
   const users = await UserService.fetchUsers();
   const usersTable = document.getElementById("users");
 
   usersTable.innerHTML = `
-        <table>
+        <table style="width: 100%; table-layout: fixed;">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Actions</th>
+                    <th style="width: 40%">Name</th>
+                    <th style="width: 40%">Email</th>
+                    <th style="width: 20%">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -18,11 +33,13 @@ async function renderUsers() {
                   .map(
                     (user) =>
                       `<tr data-id="${user.uuid}">
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
+                        <td class='name-cell'>${user.name}</td>
+                        <td class='email-cell'>${user.email}</td>
                         <td>
-                            <button class='edit-button'>✏️ Edit</button>
-                            <button class='delete-button'>🗑️ Delete</button>
+                            <div class="actions">
+                                <button class='edit-button'>✏️ Edit</button>
+                                <button class='delete-button'>🗑️ Delete</button>
+                            </div>
                         </td>
                     </tr>`,
                   )
@@ -34,8 +51,12 @@ async function renderUsers() {
   document.querySelectorAll(".edit-button").forEach((button) => {
     button.addEventListener("click", function () {
       const userRow = this.closest("tr");
-      const userId = userRow.dataset.id;
-      handleEditUser(userId);
+      if (button.textContent === "✏️ Edit") {
+        closeOtherEdits();
+        toggleEditMode(userRow);
+      } else {
+        saveUserEdits(userRow);
+      }
     });
   });
 
@@ -48,21 +69,59 @@ async function renderUsers() {
   });
 }
 
-async function handleEditUser(uuid) {
-  const userRow = document.querySelector(`tr[data-id='${uuid}']`);
-  const nameCell = userRow.children[0];
-  const emailCell = userRow.children[1];
+function closeOtherEdits() {
+  document.querySelectorAll("tr").forEach((row) => {
+    const nameCell = row.querySelector(".name-cell");
+    const emailCell = row.querySelector(".email-cell");
+    const editButton = row.querySelector(".edit-button");
 
-  const newName = prompt("Enter new name:", nameCell.textContent);
-  const newEmail = prompt("Enter new email:", emailCell.textContent);
-
-  if (newName && newEmail) {
-    try {
-      await UserService.updateUser(uuid, newName, newEmail);
-      renderUsers();
-    } catch (error) {
-      alert("Error updating user: " + error.message);
+    if (
+      nameCell &&
+      emailCell &&
+      editButton &&
+      editButton.textContent === "💾 Save"
+    ) {
+      // Cancel edit mode and revert back to original text
+      const originalName = nameCell.getAttribute("data-original");
+      const originalEmail = emailCell.getAttribute("data-original");
+      nameCell.innerHTML = originalName;
+      emailCell.innerHTML = originalEmail;
+      editButton.textContent = "✏️ Edit";
     }
+  });
+}
+
+function toggleEditMode(row) {
+  const nameCell = row.querySelector(".name-cell");
+  const emailCell = row.querySelector(".email-cell");
+  const editButton = row.querySelector(".edit-button");
+
+  if (editButton.textContent === "✏️ Edit") {
+    // Store original values in case edit is canceled
+    nameCell.setAttribute("data-original", nameCell.textContent);
+    emailCell.setAttribute("data-original", emailCell.textContent);
+
+    // Switch to edit mode
+    nameCell.innerHTML = `<input type='text' value='${nameCell.textContent}' style='width: 100%;'>`;
+    emailCell.innerHTML = `<input type='text' value='${emailCell.textContent}' style='width: 100%;'>`;
+    editButton.textContent = "💾 Save";
+  }
+}
+
+async function saveUserEdits(row) {
+  const nameCell = row.querySelector(".name-cell");
+  const emailCell = row.querySelector(".email-cell");
+  const editButton = row.querySelector(".edit-button");
+  const userId = row.dataset.id;
+
+  const newName = nameCell.querySelector("input").value;
+  const newEmail = emailCell.querySelector("input").value;
+
+  try {
+    await UserService.updateUser(userId, newName, newEmail);
+    renderUsers();
+  } catch (error) {
+    alert("Error updating user: " + error.message);
   }
 }
 
@@ -79,14 +138,16 @@ document
   .getElementById("userForm")
   .addEventListener("submit", async (event) => {
     event.preventDefault();
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
     const messageDiv = document.getElementById("message");
 
     try {
-      await UserService.addUser(name, email);
+      await UserService.addUser(nameInput.value, emailInput.value);
       messageDiv.style.color = "green";
       messageDiv.textContent = "User added successfully!";
+      nameInput.value = "";
+      emailInput.value = "";
       renderUsers();
     } catch (error) {
       messageDiv.style.color = "red";
@@ -94,4 +155,5 @@ document
     }
   });
 
+checkBackendHealth(); // Ensure backend status is checked on page load
 renderUsers();
