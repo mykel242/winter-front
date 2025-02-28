@@ -4,28 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>User Management</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                margin: 20px;
-            }
-            #users {
-                margin-top: 20px;
-            }
-            .user {
-                padding: 10px;
-                border: 1px solid #ccc;
-                margin: 5px;
-                cursor: pointer;
-            }
-            form {
-                margin-top: 20px;
-            }
-            #message {
-                margin-top: 10px;
-                color: red;
-            }
-        </style>
+        <link rel="stylesheet" href="style.css" />
     </head>
     <body>
         <h1>User Management</h1>
@@ -40,53 +19,7 @@
             <button type="submit">Add User</button>
         </form>
         <div id="message"></div>
-        <script>
-            const API_URL = "http://localhost:3000/api/users";
 
-            async function fetchUsers() {
-                const res = await fetch(API_URL);
-                const users = await res.json();
-                document.getElementById("users").innerHTML = users
-                    .map(
-                        (user) =>
-                            `<div class='user' onclick='viewUser("${user.uuid}")'>${user.name} (${user.email})</div>`,
-                    )
-                    .join("");
-            }
-
-            async function addUser(event) {
-                event.preventDefault();
-                const name = document.getElementById("name").value;
-                const email = document.getElementById("email").value;
-                const messageDiv = document.getElementById("message");
-
-                try {
-                    const response = await fetch(API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name, email }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(
-                            errorData.message || "Failed to add user",
-                        );
-                    }
-
-                    messageDiv.style.color = "green";
-                    messageDiv.textContent = "User added successfully!";
-                    fetchUsers();
-                } catch (error) {
-                    messageDiv.style.color = "red";
-                    messageDiv.textContent = error.message;
-                }
-            }
-
-            document
-                .getElementById("userForm")
-                .addEventListener("submit", addUser);
-            fetchUsers();
-        </script>
+        <script src="app.js"></script>
     </body>
 </html>
