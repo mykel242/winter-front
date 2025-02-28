@@ -63,5 +63,24 @@ async function handleDeleteUser(uuid) {
   }
 }
 
+async function checkBackendHealth() {
+  try {
+    const response = await fetch("http://localhost:3000/test");
+    if (!response.ok) throw new Error("Backend is unreachable");
+
+    document.getElementById("backend-status").textContent =
+      "✅ Backend is available";
+    document.getElementById("backend-status").style.color = "green";
+  } catch (error) {
+    document.getElementById("backend-status").textContent =
+      "X Backend is offline";
+    document.getElementById("backend-status").style.color = "red";
+  }
+}
+
 document.getElementById("userForm").addEventListener("submit", handleAddUser);
 renderUsers();
+
+document.addEventListener("DOMContentLoaded", () => {
+  checkBackendHealth();
+});
