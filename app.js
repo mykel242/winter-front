@@ -5,15 +5,28 @@ async function fetchUsers() {
     const res = await fetch(API_URL);
     if (!res.ok) throw new Error("Failed to load users.");
     const users = await res.json();
-    document.getElementById("users").innerHTML = users
-      .map(
-        (user) =>
-          `<div class='user'>
-                <span>${user.name} (${user.email})</span>
-                <button class='delete-button' onclick='deleteUser("${user.uuid}")'>🗑️</button>
-            </div>`,
-      )
-      .join("");
+    document.getElementById("users").innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users
+                      .map(
+                        (user) =>
+                          `<tr>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td><button class='delete-button' onclick='deleteUser("${user.uuid}")'>🗑️</button></td>
+                        </tr>`,
+                      )
+                      .join("")}
+                </tbody>
+            </table>`;
   } catch (error) {
     document.getElementById("message").textContent =
       "Error: Unable to fetch users.";
