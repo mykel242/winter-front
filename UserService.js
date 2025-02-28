@@ -48,6 +48,25 @@ class UserService {
       throw error;
     }
   }
+
+  async updateUser(uuid, name, email) {
+    try {
+      const response = await fetch(`${this.baseUrl}/users/${uuid}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update user");
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }
 }
 
 export default new UserService("http://localhost:3000/api");

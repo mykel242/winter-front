@@ -20,14 +20,25 @@ async function renderUsers() {
                       `<tr data-id="${user.uuid}">
                         <td>${user.name}</td>
                         <td>${user.email}</td>
-                        <td><button class='delete-button'>🗑️</button></td>
+                        <td>
+                            <button class='edit-button'>✏️ Edit</button>
+                            <button class='delete-button'>🗑️ Delete</button>
+                        </td>
                     </tr>`,
                   )
                   .join("")}
             </tbody>
         </table>`;
 
-  // Attach event listeners to delete buttons
+  // Attach event listeners to edit and delete buttons
+  document.querySelectorAll(".edit-button").forEach((button) => {
+    button.addEventListener("click", function () {
+      const userRow = this.closest("tr");
+      const userId = userRow.dataset.id;
+      handleEditUser(userId);
+    });
+  });
+
   document.querySelectorAll(".delete-button").forEach((button) => {
     button.addEventListener("click", async function () {
       const userRow = this.closest("tr");
@@ -37,50 +48,50 @@ async function renderUsers() {
   });
 }
 
-async function handleAddUser(event) {
-  event.preventDefault();
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
-  const messageDiv = document.getElementById("message");
+async function handleEditUser(uuid) {
+  const userRow = document.querySelector(`tr[data-id='${uuid}']`);
+  const nameCell = userRow.children[0];
+  const emailCell = userRow.children[1];
 
-  try {
-    await UserService.addUser(name, email);
-    messageDiv.style.color = "green";
-    messageDiv.textContent = "User added successfully!";
-    renderUsers();
-  } catch (error) {
-    messageDiv.style.color = "red";
-    messageDiv.textContent = error.message;
+  const newName = prompt("Enter new name:", nameCell.textContent);
+  const newEmail = prompt("Enter new email:", emailCell.textContent);
+
+  if (newName && newEmail) {
+    try {
+      await UserService.updateUser(uuid, newName, newEmail);
+      renderUsers();
+    } catch (error) {
+      alert("Error updating user: " + error.message);
+    }
   }
 }
 
 async function handleDeleteUser(uuid) {
   try {
     await UserService.deleteUser(uuid);
-    renderUsers(); // Refresh user list after deletion
+    renderUsers();
   } catch (error) {
     document.getElementById("message").textContent = "Error: " + error.message;
   }
 }
 
-async function checkBackendHealth() {
-  try {
-    const response = await fetch("http://localhost:3000/test");
-    if (!response.ok) throw new Error("Backend is unreachable");
+document
+  .getElementById("userForm")
+  .addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const messageDiv = document.getElementById("message");
 
-    document.getElementById("backend-status").textContent =
-      "✅ Backend is available";
-    document.getElementById("backend-status").style.color = "green";
-  } catch (error) {
-    document.getElementById("backend-status").textContent =
-      "X Backend is offline";
-    document.getElementById("backend-status").style.color = "red";
-  }
-}
+    try {
+      await UserService.addUser(name, email);
+      messageDiv.style.color = "green";
+      messageDiv.textContent = "User added successfully!";
+      renderUsers();
+    } catch (error) {
+      messageDiv.style.color = "red";
+      messageDiv.textContent = error.message;
+    }
+  });
 
-document.getElementById("userForm").addEventListener("submit", handleAddUser);
 renderUsers();
-
-document.addEventListener("DOMContentLoaded", () => {
-  checkBackendHealth();
-});
