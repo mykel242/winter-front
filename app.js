@@ -6,16 +6,9 @@ async function checkBackendHealth() {
     const response = await fetch(`${API_BASE_URL}/test`);
     if (!response.ok)
       throw new Error(`Backend is unreachable at ${API_BASE_URL}`);
-
-    const backendStatus = document.getElementById("backend-status");
-    backendStatus.textContent = "✅ Backend is online";
-    backendStatus.classList.add("online");
-    backendStatus.classList.remove("offline");
+    showMessage("✅ Backend Online.");
   } catch (error) {
-    const backendStatus = document.getElementById("backend-status");
-    backendStatus.textContent = "❌ Backend is offline";
-    backendStatus.classList.add("offline");
-    backendStatus.classList.remove("online");
+    showError("❌ Backend is offline");
   }
 }
 
@@ -23,6 +16,21 @@ function toggleUserForm() {
   const formContainer = document.getElementById("userFormContainer");
   formContainer.style.display =
     formContainer.style.display === "none" ? "block" : "none";
+}
+
+function showError(message) {
+  const errorDiv = document.getElementById("error-message");
+  errorDiv.textContent = message;
+  errorDiv.style.color = "red";
+  errorDiv.style.display = "block";
+  setTimeout(() => (errorDiv.style.display = "none"), 3000); // Hide after 3s
+}
+function showMessage(message) {
+  const errorDiv = document.getElementById("error-message");
+  errorDiv.textContent = message;
+  errorDiv.style.color = "green";
+  errorDiv.style.display = "block";
+  setTimeout(() => (errorDiv.style.display = "none"), 3000); // Hide after 3s
 }
 
 function closeOtherEdits() {
@@ -58,17 +66,47 @@ function toggleEditMode(row) {
     nameCell.setAttribute("data-original", nameCell.textContent);
     emailCell.setAttribute("data-original", emailCell.textContent);
 
-    // Switch to edit mode
-    nameCell.innerHTML = `<input type='text' value='${nameCell.textContent}' style='width: 100%;'>`;
-    emailCell.innerHTML = `<input type='text' value='${emailCell.textContent}' style='width: 100%;'>`;
+    // Create input fields
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = nameCell.textContent;
+    nameInput.style.width = "100%";
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "text";
+    emailInput.value = emailCell.textContent;
+    emailInput.style.width = "100%";
+
+    // Replace cell content with input fields
+    nameCell.innerHTML = "";
+    emailCell.innerHTML = "";
+    nameCell.appendChild(nameInput);
+    emailCell.appendChild(emailInput);
+
+    // Focus on the name field
+    nameInput.focus();
+
+    // Add edit mode class to highlight row
+    row.classList.add("edit-mode");
     editButton.textContent = "💾 Save";
 
-    // Add edit-mode class to highlight the row
-    row.classList.add("edit-mode");
+    // Event listener for Enter key (submits the edit)
+    [nameInput, emailInput].forEach((input) => {
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          saveUserEdits(row);
+        } else if (event.key === "Tab") {
+          event.preventDefault(); // Prevent default tabbing behavior
+          if (input === nameInput) {
+            emailInput.focus(); // Move to email field
+          } else {
+            editButton.focus(); // Move to Save button
+          }
+        }
+      });
+    });
   } else {
     saveUserEdits(row);
-
-    // Remove edit-mode class after saving
     row.classList.remove("edit-mode");
   }
 }
@@ -76,17 +114,24 @@ function toggleEditMode(row) {
 async function saveUserEdits(row) {
   const nameCell = row.querySelector(".name-cell");
   const emailCell = row.querySelector(".email-cell");
-  const editButton = row.querySelector(".edit-button");
   const userId = row.dataset.id;
 
-  const newName = nameCell.querySelector("input").value;
-  const newEmail = emailCell.querySelector("input").value;
+  const newName = nameCell.querySelector("input").value.trim();
+  const newEmail = emailCell.querySelector("input").value.trim();
+
+  if (!newName || !newEmail) {
+    showError("Name and email cannot be empty!");
+    return;
+  }
 
   try {
     await UserService.updateUser(userId, newName, newEmail);
-    renderUsers();
+    nameCell.innerHTML = newName;
+    emailCell.innerHTML = newEmail;
+    row.classList.remove("edit-mode");
+    row.querySelector(".edit-button").textContent = "✏️ Edit";
   } catch (error) {
-    alert("Error updating user: " + error.message);
+    showError("Error updating user: " + error.message);
   }
 }
 
@@ -116,7 +161,7 @@ async function renderUsers() {
                 ${users
                   .map(
                     (user) =>
-                      `<tr data-id="${user.uuid}">
+                      `<tr class="user-row" data-id="${user.uuid}">
                         <td class='name-cell'>${user.name}</td>
                         <td class='email-cell'>${user.email}</td>
                         <td>
@@ -155,6 +200,7 @@ async function renderUsers() {
 document
   .getElementById("showUserForm")
   .addEventListener("click", toggleUserForm);
+
 document
   .getElementById("cancelUserForm")
   .addEventListener("click", toggleUserForm);
@@ -182,3 +228,30 @@ document
 
 checkBackendHealth();
 renderUsers();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userTable = document.getElementById("users");
+
+  userTable.addEventListener("dblclick", (event) => {
+    let row = event.target.closest("tr"); // Get the row being double-clicked
+
+    if (row && row.classList.contains("user-row")) {
+      const editButton = row.querySelector(".edit-button");
+
+      // If not already in edit mode, trigger edit mode
+      if (editButton.textContent === "✏️ Edit") {
+        closeOtherEdits();
+        toggleEditMode(row);
+      }
+    }
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (
+    !event.target.closest("tr.edit-mode") &&
+    !event.target.classList.contains("edit-button")
+  ) {
+    closeOtherEdits();
+  }
+});
