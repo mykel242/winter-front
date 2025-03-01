@@ -142,3 +142,8 @@ button {
     color: red;
     font-weight: bold;
 }
+
+tr.edit-mode {
+    outline: 1px solid #007bff !important;
+    background-color: #f0f8ff; /* Light blue background for visibility */
+}

@@ -43,6 +43,7 @@ function closeOtherEdits() {
       nameCell.innerHTML = originalName;
       emailCell.innerHTML = originalEmail;
       editButton.textContent = "✏️ Edit";
+      row.classList.remove("edit-mode");
     }
   });
 }
@@ -61,8 +62,14 @@ function toggleEditMode(row) {
     nameCell.innerHTML = `<input type='text' value='${nameCell.textContent}' style='width: 100%;'>`;
     emailCell.innerHTML = `<input type='text' value='${emailCell.textContent}' style='width: 100%;'>`;
     editButton.textContent = "💾 Save";
+
+    // Add edit-mode class to highlight the row
+    row.classList.add("edit-mode");
   } else {
     saveUserEdits(row);
+
+    // Remove edit-mode class after saving
+    row.classList.remove("edit-mode");
   }
 }
 
