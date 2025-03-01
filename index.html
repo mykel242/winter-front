@@ -26,17 +26,21 @@
     </head>
     <body>
         <h1>User Management</h1>
-
         <h2>Users</h2>
         <div id="users"></div>
 
-        <h2>Add User</h2>
-        <form id="userForm">
-            <input type="text" id="name" placeholder="Name" required />
-            <input type="email" id="email" placeholder="Email" required />
-            <button type="submit">Add User</button>
-        </form>
-        <div id="message"></div>
+        <button id="showUserForm">Add New User</button>
+        <div id="userFormContainer" style="display: none">
+            <h2>Add User</h2>
+            <form id="userForm">
+                <input type="text" id="name" placeholder="Name" required />
+                <input type="email" id="email" placeholder="Email" required />
+                <button type="submit">Add User</button>
+                <button type="button" id="cancelUserForm">Cancel</button>
+            </form>
+            <p id="message"></p>
+        </div>
+
         <p id="backend-status">Checking backend status...</p>
         <script type="module" src="app.js"></script>
     </body>

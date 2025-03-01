@@ -64,31 +64,70 @@ button {
     background-color: #a71d2a;
 }
 
-form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: nowrap;
-    max-width: 600px;
+#userFormContainer {
     margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    max-width: 400px;
 }
 
-form input {
-    flex: 1;
+#userForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#userForm input {
     padding: 10px;
     font-size: 14px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
-form button {
+#userForm button {
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#showUserForm {
+    margin-top: 20px;
+    padding: 10px 15px;
     background-color: #28a745;
     color: white;
     border: none;
     cursor: pointer;
     border-radius: 5px;
-    padding: 10px 15px;
-    white-space: nowrap;
 }
 
-form button:hover {
+#showUserForm:hover {
     background-color: #218838;
+}
+
+#cancelUserForm {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#cancelUserForm:hover {
+    background-color: #a71d2a;
+}
+
+/* Hide border and change text color to blue while editing */
+.name-cell input,
+.email-cell input {
+    border: none;
+    outline: none;
+    color: blue;
+    background: transparent;
+    font-size: inherit;
+    width: 100%;
 }

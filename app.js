@@ -15,58 +15,10 @@ async function checkBackendHealth() {
   }
 }
 
-async function renderUsers() {
-  const users = await UserService.fetchUsers();
-  const usersTable = document.getElementById("users");
-
-  usersTable.innerHTML = `
-        <table style="width: 100%; table-layout: fixed;">
-            <thead>
-                <tr>
-                    <th style="width: 40%">Name</th>
-                    <th style="width: 40%">Email</th>
-                    <th style="width: 20%">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${users
-                  .map(
-                    (user) =>
-                      `<tr data-id="${user.uuid}">
-                        <td class='name-cell'>${user.name}</td>
-                        <td class='email-cell'>${user.email}</td>
-                        <td>
-                            <div class="actions">
-                                <button class='edit-button'>✏️ Edit</button>
-                                <button class='delete-button'>🗑️ Delete</button>
-                            </div>
-                        </td>
-                    </tr>`,
-                  )
-                  .join("")}
-            </tbody>
-        </table>`;
-
-  // Attach event listeners to edit and delete buttons
-  document.querySelectorAll(".edit-button").forEach((button) => {
-    button.addEventListener("click", function () {
-      const userRow = this.closest("tr");
-      if (button.textContent === "✏️ Edit") {
-        closeOtherEdits();
-        toggleEditMode(userRow);
-      } else {
-        saveUserEdits(userRow);
-      }
-    });
-  });
-
-  document.querySelectorAll(".delete-button").forEach((button) => {
-    button.addEventListener("click", async function () {
-      const userRow = this.closest("tr");
-      const userId = userRow.dataset.id;
-      await handleDeleteUser(userId);
-    });
-  });
+function toggleUserForm() {
+  const formContainer = document.getElementById("userFormContainer");
+  formContainer.style.display =
+    formContainer.style.display === "none" ? "block" : "none";
 }
 
 function closeOtherEdits() {
@@ -105,6 +57,8 @@ function toggleEditMode(row) {
     nameCell.innerHTML = `<input type='text' value='${nameCell.textContent}' style='width: 100%;'>`;
     emailCell.innerHTML = `<input type='text' value='${emailCell.textContent}' style='width: 100%;'>`;
     editButton.textContent = "💾 Save";
+  } else {
+    saveUserEdits(row);
   }
 }
 
@@ -125,14 +79,74 @@ async function saveUserEdits(row) {
   }
 }
 
-async function handleDeleteUser(uuid) {
+async function handleDeleteUser(userId) {
   try {
-    await UserService.deleteUser(uuid);
+    await UserService.deleteUser(userId);
     renderUsers();
   } catch (error) {
-    document.getElementById("message").textContent = "Error: " + error.message;
+    alert("Error deleting user: " + error.message);
   }
 }
+
+async function renderUsers() {
+  const users = await UserService.fetchUsers();
+  const usersTable = document.getElementById("users");
+
+  usersTable.innerHTML = `
+        <table style="width: 100%; table-layout: auto;">
+            <thead>
+                <tr>
+                    <th style="width: 40%">Name</th>
+                    <th style="width: 40%">Email</th>
+                    <th style="width: 20%">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${users
+                  .map(
+                    (user) =>
+                      `<tr data-id="${user.uuid}">
+                        <td class='name-cell'>${user.name}</td>
+                        <td class='email-cell'>${user.email}</td>
+                        <td>
+                            <div class="actions">
+                                <button class='edit-button'>✏️ Edit</button>
+                                <button class='delete-button'>🗑️ Delete</button>
+                            </div>
+                        </td>
+                    </tr>`,
+                  )
+                  .join("")}
+            </tbody>
+        </table>`;
+
+  document.querySelectorAll(".edit-button").forEach((button) => {
+    button.addEventListener("click", function () {
+      const userRow = this.closest("tr");
+      if (button.textContent === "✏️ Edit") {
+        closeOtherEdits();
+        toggleEditMode(userRow);
+      } else {
+        saveUserEdits(userRow);
+      }
+    });
+  });
+
+  document.querySelectorAll(".delete-button").forEach((button) => {
+    button.addEventListener("click", async function () {
+      const userRow = this.closest("tr");
+      const userId = userRow.dataset.id;
+      await handleDeleteUser(userId);
+    });
+  });
+}
+
+document
+  .getElementById("showUserForm")
+  .addEventListener("click", toggleUserForm);
+document
+  .getElementById("cancelUserForm")
+  .addEventListener("click", toggleUserForm);
 
 document
   .getElementById("userForm")
@@ -141,13 +155,13 @@ document
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
     const messageDiv = document.getElementById("message");
-
     try {
       await UserService.addUser(nameInput.value, emailInput.value);
       messageDiv.style.color = "green";
       messageDiv.textContent = "User added successfully!";
       nameInput.value = "";
       emailInput.value = "";
+      document.getElementById("userFormContainer").style.display = "none"; // Hide form on success
       renderUsers();
     } catch (error) {
       messageDiv.style.color = "red";
@@ -155,5 +169,5 @@ document
     }
   });
 
-checkBackendHealth(); // Ensure backend status is checked on page load
+checkBackendHealth();
 renderUsers();
