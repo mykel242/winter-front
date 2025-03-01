@@ -131,3 +131,14 @@ button {
     font-size: inherit;
     width: 100%;
 }
+
+/* Backend status styles */
+.online {
+    color: green;
+    font-weight: bold;
+}
+
+.offline {
+    color: red;
+    font-weight: bold;
+}

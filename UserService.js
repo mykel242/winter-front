@@ -1,3 +1,5 @@
+import API_BASE_URL from "./config.js";
+
 class UserService {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
@@ -69,4 +71,5 @@ class UserService {
   }
 }
 
-export default new UserService("http://localhost:3000/api");
+// Use the dynamic API base URL from config.js
+export default new UserService(`${API_BASE_URL}/api`);

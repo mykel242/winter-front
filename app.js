@@ -1,17 +1,21 @@
+import API_BASE_URL from "./config.js";
 import UserService from "./UserService.js";
 
 async function checkBackendHealth() {
   try {
-    const response = await fetch("http://localhost:3000/test");
-    if (!response.ok) throw new Error("Backend is unreachable");
+    const response = await fetch(`${API_BASE_URL}/test`);
+    if (!response.ok)
+      throw new Error(`Backend is unreachable at ${API_BASE_URL}`);
 
-    document.getElementById("backend-status").textContent =
-      "✅ Backend is online";
-    document.getElementById("backend-status").style.color = "green";
+    const backendStatus = document.getElementById("backend-status");
+    backendStatus.textContent = "✅ Backend is online";
+    backendStatus.classList.add("online");
+    backendStatus.classList.remove("offline");
   } catch (error) {
-    document.getElementById("backend-status").textContent =
-      "❌ Backend is offline";
-    document.getElementById("backend-status").style.color = "red";
+    const backendStatus = document.getElementById("backend-status");
+    backendStatus.textContent = "❌ Backend is offline";
+    backendStatus.classList.add("offline");
+    backendStatus.classList.remove("online");
   }
 }
 
