@@ -71,21 +71,21 @@ function closeOtherEdits() {
     const nameCell = row.querySelector(".name-cell");
     const emailCell = row.querySelector(".email-cell");
     const editButton = row.querySelector(".edit-button");
+    const saveButton = row.querySelector(".save-button");
 
-    if (
-      nameCell &&
-      emailCell &&
-      editButton &&
-      editButton.dataset.mode === "save"
-    ) {
-      // Cancel edit mode and revert back to original text
+    if (nameCell && emailCell && row.classList.contains("edit-mode")) {
+      // Restore original values
       const originalName = nameCell.getAttribute("data-original");
       const originalEmail = emailCell.getAttribute("data-original");
       nameCell.innerHTML = originalName;
       emailCell.innerHTML = originalEmail;
-      editButton.textContent = "✏️";
+
+      // Toggle button visibility
+      editButton.style.display = "inline-block";
+      saveButton.style.display = "none";
+
+      // Remove edit mode class
       row.classList.remove("edit-mode");
-      editButton.dataset.mode = "edit"; // Update state
     }
   });
 }
@@ -94,8 +94,9 @@ function toggleEditMode(row) {
   const nameCell = row.querySelector(".name-cell");
   const emailCell = row.querySelector(".email-cell");
   const editButton = row.querySelector(".edit-button");
+  const saveButton = row.querySelector(".save-button");
 
-  if (editButton.dataset.mode === "edit") {
+  if (editButton.style.display !== "none") {
     nameCell.setAttribute("data-original", nameCell.textContent);
     emailCell.setAttribute("data-original", emailCell.textContent);
 
@@ -116,8 +117,10 @@ function toggleEditMode(row) {
 
     nameInput.focus();
     row.classList.add("edit-mode");
-    editButton.textContent = "💾";
-    editButton.dataset.mode = "save"; // Update state
+
+    // Toggle button visibility
+    editButton.style.display = "none";
+    saveButton.style.display = "inline-block";
 
     [nameInput, emailInput].forEach((input) => {
       input.addEventListener("keydown", (event) => {
@@ -128,7 +131,7 @@ function toggleEditMode(row) {
           if (input === nameInput) {
             emailInput.focus();
           } else {
-            editButton.focus();
+            saveButton.focus();
           }
         }
       });
@@ -143,6 +146,7 @@ async function saveUserEdits(row) {
   const nameCell = row.querySelector(".name-cell");
   const emailCell = row.querySelector(".email-cell");
   const editButton = row.querySelector(".edit-button");
+  const saveButton = row.querySelector(".save-button");
   const userId = row.dataset.id;
 
   const newName = nameCell.querySelector("input").value.trim();
@@ -169,9 +173,11 @@ async function saveUserEdits(row) {
     nameCell.innerHTML = newName;
     emailCell.innerHTML = newEmail;
     row.classList.remove("edit-mode");
-    // Reset button text and mode
-    editButton.textContent = "✏️";
-    editButton.dataset.mode = "edit";
+
+    // Toggle button visibility
+    editButton.style.display = "inline-block";
+    saveButton.style.display = "none";
+
     showNotification("User updated successfully!", NotificationType.SUCCESS);
   } catch (error) {
     showNotification(
@@ -216,7 +222,8 @@ async function renderUsers() {
                         <td class='email-cell'>${user.email}</td>
                         <td>
                             <div class="actions">
-                              <button class='edit-button' data-mode="edit">✏️</button>
+                              <button class='edit-button'>✏️</button>
+                              <button class='save-button' style="display: none;">💾</button>
                               <button class='delete-button'>🗑️</button>
                             </div>
                         </td>
@@ -262,15 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Double-click to enter edit mode
   userTable.addEventListener("dblclick", (event) => {
     let row = event.target.closest("tr"); // Get the row being double-clicked
-
     if (row && row.classList.contains("user-row")) {
-      const editButton = row.querySelector(".edit-button");
-
-      // If not already in edit mode, trigger edit mode
-      if (editButton.dataset.mode === "edit") {
-        closeOtherEdits();
-        toggleEditMode(row);
-      }
+      closeOtherEdits();
+      toggleEditMode(row);
     }
   });
 
@@ -280,12 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!row) return;
 
     if (event.target.classList.contains("edit-button")) {
-      if (event.target.dataset.mode === "edit") {
-        closeOtherEdits();
-        toggleEditMode(row);
-      } else {
-        saveUserEdits(row);
-      }
+      closeOtherEdits();
+      toggleEditMode(row);
+    }
+
+    if (event.target.classList.contains("save-button")) {
+      saveUserEdits(row);
     }
 
     if (event.target.classList.contains("delete-button")) {
@@ -299,7 +300,8 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("click", (event) => {
   if (
     !event.target.closest(".user-row.edit-mode") &&
-    !event.target.classList.contains("edit-button")
+    !event.target.classList.contains("edit-button") &&
+    !event.target.classList.contains("save-button")
   ) {
     closeOtherEdits();
   }

@@ -58,12 +58,22 @@ button {
     border: 1px solid #dc3545;
 }
 
+.save-button {
+    background-color: #eeeeee;
+    color: white;
+    border: 1px solid #00ff7b;
+}
+
 .edit-button:hover {
     background-color: #0056b3;
 }
 
 .delete-button:hover {
     background-color: #a71d2a;
+}
+
+.save-button:hover {
+    background-color: #00ff7b;
 }
 
 #userFormContainer {
