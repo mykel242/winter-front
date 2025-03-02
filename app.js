@@ -76,15 +76,16 @@ function closeOtherEdits() {
       nameCell &&
       emailCell &&
       editButton &&
-      editButton.textContent === "💾 Save"
+      editButton.dataset.mode === "save"
     ) {
       // Cancel edit mode and revert back to original text
       const originalName = nameCell.getAttribute("data-original");
       const originalEmail = emailCell.getAttribute("data-original");
       nameCell.innerHTML = originalName;
       emailCell.innerHTML = originalEmail;
-      editButton.textContent = "✏️ Edit";
+      editButton.textContent = "✏️";
       row.classList.remove("edit-mode");
+      editButton.dataset.mode = "edit"; // Update state
     }
   });
 }
@@ -94,7 +95,7 @@ function toggleEditMode(row) {
   const emailCell = row.querySelector(".email-cell");
   const editButton = row.querySelector(".edit-button");
 
-  if (editButton.textContent === "✏️ Edit") {
+  if (editButton.dataset.mode === "edit") {
     nameCell.setAttribute("data-original", nameCell.textContent);
     emailCell.setAttribute("data-original", emailCell.textContent);
 
@@ -115,7 +116,8 @@ function toggleEditMode(row) {
 
     nameInput.focus();
     row.classList.add("edit-mode");
-    editButton.textContent = "💾 Save";
+    editButton.textContent = "💾";
+    editButton.dataset.mode = "save"; // Update state
 
     [nameInput, emailInput].forEach((input) => {
       input.addEventListener("keydown", (event) => {
@@ -140,6 +142,7 @@ function toggleEditMode(row) {
 async function saveUserEdits(row) {
   const nameCell = row.querySelector(".name-cell");
   const emailCell = row.querySelector(".email-cell");
+  const editButton = row.querySelector(".edit-button");
   const userId = row.dataset.id;
 
   const newName = nameCell.querySelector("input").value.trim();
@@ -166,7 +169,9 @@ async function saveUserEdits(row) {
     nameCell.innerHTML = newName;
     emailCell.innerHTML = newEmail;
     row.classList.remove("edit-mode");
-    row.querySelector(".edit-button").textContent = "✏️ Edit";
+    // Reset button text and mode
+    editButton.textContent = "✏️";
+    editButton.dataset.mode = "edit";
     showNotification("User updated successfully!", NotificationType.SUCCESS);
   } catch (error) {
     showNotification(
@@ -211,8 +216,8 @@ async function renderUsers() {
                         <td class='email-cell'>${user.email}</td>
                         <td>
                             <div class="actions">
-                                <button class='edit-button'>✏️ Edit</button>
-                                <button class='delete-button'>🗑️ Delete</button>
+                              <button class='edit-button' data-mode="edit">✏️</button>
+                              <button class='delete-button'>🗑️</button>
                             </div>
                         </td>
                     </tr>`,
@@ -262,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const editButton = row.querySelector(".edit-button");
 
       // If not already in edit mode, trigger edit mode
-      if (editButton.textContent === "✏️ Edit") {
+      if (editButton.dataset.mode === "edit") {
         closeOtherEdits();
         toggleEditMode(row);
       }
@@ -275,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!row) return;
 
     if (event.target.classList.contains("edit-button")) {
-      if (event.target.textContent === "✏️ Edit") {
+      if (event.target.dataset.mode === "edit") {
         closeOtherEdits();
         toggleEditMode(row);
       } else {

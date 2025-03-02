@@ -47,13 +47,15 @@ button {
 }
 
 .edit-button {
-    background-color: #007bff;
+    background-color: #eeeeee;
     color: white;
+    border: 1px solid #007bff;
 }
 
 .delete-button {
-    background-color: #dc3545;
+    background-color: #eeeeee;
     color: white;
+    border: 1px solid #dc3545;
 }
 
 .edit-button:hover {
