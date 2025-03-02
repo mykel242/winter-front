@@ -150,18 +150,22 @@ tr.edit-mode {
 
 /* General notification styling */
 .notification {
+    position: fixed; /* Keeps it floating */
+    top: 20px; /* Distance from the top */
+    right: 20px; /* Distance from the right */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 15px;
-    margin: 10px 0;
+    padding: 12px 18px;
     border-radius: 5px;
     font-size: 16px;
     font-weight: bold;
-    width: fit-content;
-    max-width: 80%;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    width: auto;
+    min-width: 250px;
+    max-width: 400px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
     border-left: 5px solid;
+    z-index: 1000; /* Ensures it stays on top */
 }
 
 /* Success notification */
