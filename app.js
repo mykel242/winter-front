@@ -145,20 +145,28 @@ async function saveUserEdits(row) {
   const newName = nameCell.querySelector("input").value.trim();
   const newEmail = emailCell.querySelector("input").value.trim();
 
+  // Basic validation
   if (!newName || !newEmail) {
     showNotification("Name and email cannot be empty!", NotificationType.ERROR);
     return;
   }
 
+  if (!/^[a-zA-Z\s]+$/.test(newName)) {
+    showNotification("Invalid name format!", NotificationType.ERROR);
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    showNotification("Invalid email format!", NotificationType.ERROR);
+    return;
+  }
+
   try {
     await UserService.updateUser(userId, newName, newEmail);
-
-    // Update only this row instead of full table reload
     nameCell.innerHTML = newName;
     emailCell.innerHTML = newEmail;
     row.classList.remove("edit-mode");
     row.querySelector(".edit-button").textContent = "✏️ Edit";
-
     showNotification("User updated successfully!", NotificationType.SUCCESS);
   } catch (error) {
     showNotification(
