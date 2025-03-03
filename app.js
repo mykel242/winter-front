@@ -260,6 +260,114 @@ async function renderUsers() {
                 </tr>
             </tbody>
         </table>`;
+
+  attachNewUserFormListeners(); // Attach event listeners after rendering
+}
+
+function attachNewUserFormListeners() {
+  const nameInput = document.getElementById("new-name");
+  const emailInput = document.getElementById("new-email");
+  const addUserButton = document.getElementById("add-user-button");
+
+  if (!nameInput || !emailInput || !addUserButton) {
+    console.error(
+      "New user form elements not found. Ensure #new-name, #new-email, and #add-user-button exist.",
+    );
+    return;
+  }
+
+  // ✅ Remove existing event listeners before adding new ones
+  nameInput.replaceWith(nameInput.cloneNode(true));
+  emailInput.replaceWith(emailInput.cloneNode(true));
+  addUserButton.replaceWith(addUserButton.cloneNode(true));
+
+  // Reassign the new elements after cloning
+  const newNameInput = document.getElementById("new-name");
+  const newEmailInput = document.getElementById("new-email");
+  const newAddUserButton = document.getElementById("add-user-button");
+
+  // Move focus to email field when "Enter" is pressed in name input
+  newNameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && newNameInput.value.trim() !== "") {
+      event.preventDefault();
+      newEmailInput.focus();
+    }
+  });
+
+  // Move focus to "Add User" button if email is valid
+  newEmailInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (validateEmail(newEmailInput.value)) {
+        newAddUserButton.focus();
+      }
+    }
+  });
+
+  // Trigger user addition on "Enter" when focused on the button
+  newAddUserButton.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addUserHandler();
+    }
+  });
+
+  // ✅ NEW: Trigger user addition on button click (ensuring no duplicates)
+  newAddUserButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    addUserHandler();
+  });
+
+  console.log("Event listeners attached to new user form.");
+}
+
+async function addUserHandler() {
+  const nameInput = document.getElementById("new-name");
+  const emailInput = document.getElementById("new-email");
+
+  const newName = nameInput.value.trim();
+  const newEmail = emailInput.value.trim();
+
+  if (!newName || !newEmail) {
+    showNotification("Name and email cannot be empty!", "error", true);
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9\s]+$/.test(newName)) {
+    showNotification(
+      "Invalid name format! Only letters, numbers, and spaces are allowed.",
+      "error",
+      true,
+    );
+    return;
+  }
+
+  if (!validateEmail(newEmail)) {
+    showNotification("Invalid email format!", "error", true);
+    return;
+  }
+
+  try {
+    const result = await UserService.addUser(newName, newEmail);
+    if (!result.success) {
+      showNotification(result.message, "error", true);
+      return;
+    }
+    showNotification("User added successfully!", "success");
+
+    // Clear input fields
+    nameInput.value = "";
+    emailInput.value = "";
+
+    renderUsers();
+  } catch (error) {
+    showNotification("Error adding user: " + error.message, "error", true);
+  }
+}
+
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
