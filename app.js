@@ -1,6 +1,9 @@
 import API_BASE_URL from "./config.js";
 import UserService from "./UserService.js";
 
+// Expose UserService globally for testing
+window.UserService = UserService;
+
 const NotificationType = {
   SUCCESS: "success",
   ERROR: "error",

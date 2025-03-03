@@ -2,34 +2,52 @@ import API_BASE_URL from "./config.js";
 class UserService {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
+    this.controller = null;
+  }
+
+  // Helper function to create a new AbortController
+  createAbortSignal() {
+    if (this.controller) {
+      this.controller.abort(); // Cancel the previous request
+    }
+    this.controller = new AbortController();
+    return this.controller.signal;
   }
 
   async fetchUsers() {
     try {
-      const res = await fetch(`${this.baseUrl}/api/users`);
+      const res = await fetch(`${this.baseUrl}/api/users`, {
+        signal: this.createAbortSignal(),
+      });
       if (!res.ok) throw new Error("Failed to load users.");
 
       const data = await res.json();
-
-      if (!Array.isArray(data)) {
+      if (!Array.isArray(data))
         throw new Error("Invalid response format: Expected an array.");
-      }
 
       return data;
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.warn("Fetch aborted: fetchUsers was canceled.");
+        return []; // Return an empty array if the request was canceled
+      }
       console.error("Error fetching users:", error);
-      return []; // Always return an empty array on failure
+      return [];
     }
   }
 
   async getUserById(userId) {
     try {
       const res = await fetch(`${this.baseUrl}/api/users/${userId}`, {
-        signal: this.controller.signal,
+        signal: this.createAbortSignal(),
       });
       if (!res.ok) throw new Error("User not found.");
       return await res.json();
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.warn("Fetch aborted: getUserById was canceled.");
+        return null;
+      }
       console.error("Error fetching user:", error);
       return null;
     }
@@ -41,6 +59,7 @@ class UserService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email }),
+        signal: this.createAbortSignal(),
       });
 
       if (!response.ok) {
@@ -49,6 +68,10 @@ class UserService {
       }
       return { success: true };
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.warn("Fetch aborted: addUser was canceled.");
+        return { success: false, message: "Request was canceled." };
+      }
       console.error("Error adding user:", error);
       return { success: false, message: error.message };
     }
@@ -58,10 +81,15 @@ class UserService {
     try {
       const response = await fetch(`${this.baseUrl}/api/users/${uuid}`, {
         method: "DELETE",
+        signal: this.createAbortSignal(),
       });
       if (!response.ok) throw new Error("Failed to delete user.");
       return { success: true };
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.warn("Fetch aborted: deleteUser was canceled.");
+        return { success: false, message: "Request was canceled." };
+      }
       console.error("Error deleting user:", error);
       return { success: false, message: error.message };
     }
@@ -73,6 +101,7 @@ class UserService {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName, email: newEmail }),
+        signal: this.createAbortSignal(),
       });
 
       if (!response.ok) {
@@ -81,6 +110,10 @@ class UserService {
       }
       return { success: true };
     } catch (error) {
+      if (error.name === "AbortError") {
+        console.warn("Fetch aborted: updateUser was canceled.");
+        return { success: false, message: "Request was canceled." };
+      }
       console.error("Error updating user:", error);
       return { success: false, message: error.message };
     }
