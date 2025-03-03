@@ -17,12 +17,6 @@ async function checkBackendHealth() {
   }
 }
 
-// function toggleUserForm() {
-//   const formContainer = document.getElementById("userFormContainer");
-//   formContainer.style.display =
-//     formContainer.style.display === "none" ? "block" : "none";
-// }
-
 function showNotification(
   message,
   type = NotificationType.SUCCESS,
@@ -247,35 +241,6 @@ async function renderUsers() {
             </tbody>
         </table>`;
 }
-
-// document
-//   .getElementById("showUserForm")
-//   .addEventListener("click", toggleUserForm);
-
-// document
-//   .getElementById("cancelUserForm")
-//   .addEventListener("click", toggleUserForm);
-
-// document
-//   .getElementById("userForm")
-//   .addEventListener("submit", async (event) => {
-//     event.preventDefault();
-//     const nameInput = document.getElementById("name");
-//     const emailInput = document.getElementById("email");
-//     const messageDiv = document.getElementById("message");
-//     try {
-//       await UserService.addUser(nameInput.value, emailInput.value);
-//       messageDiv.style.color = "green";
-//       messageDiv.textContent = "User added successfully!";
-//       nameInput.value = "";
-//       emailInput.value = "";
-//       document.getElementById("userFormContainer").style.display = "none"; // Hide form on success
-//       renderUsers();
-//     } catch (error) {
-//       messageDiv.style.color = "red";
-//       messageDiv.textContent = error.message;
-//     }
-//   });
 
 document.addEventListener("DOMContentLoaded", () => {
   const userTable = document.getElementById("users");

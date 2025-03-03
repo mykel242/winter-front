@@ -1,5 +1,4 @@
 import API_BASE_URL from "./config.js";
-
 class UserService {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
@@ -7,18 +6,38 @@ class UserService {
 
   async fetchUsers() {
     try {
-      const res = await fetch(`${this.baseUrl}/users`);
+      const res = await fetch(`${this.baseUrl}/api/users`);
       if (!res.ok) throw new Error("Failed to load users.");
-      return await res.json();
+
+      const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response format: Expected an array.");
+      }
+
+      return data;
     } catch (error) {
       console.error("Error fetching users:", error);
-      return [];
+      return []; // Always return an empty array on failure
+    }
+  }
+
+  async getUserById(userId) {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/users/${userId}`, {
+        signal: this.controller.signal,
+      });
+      if (!res.ok) throw new Error("User not found.");
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return null;
     }
   }
 
   async addUser(name, email) {
     try {
-      const response = await fetch(`${this.baseUrl}/users`, {
+      const response = await fetch(`${this.baseUrl}/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email }),
@@ -28,48 +47,44 @@ class UserService {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add user");
       }
-      return true;
+      return { success: true };
     } catch (error) {
       console.error("Error adding user:", error);
-      throw error;
+      return { success: false, message: error.message };
     }
   }
 
   async deleteUser(uuid) {
     try {
-      const response = await fetch(`${this.baseUrl}/users/${uuid}`, {
+      const response = await fetch(`${this.baseUrl}/api/users/${uuid}`, {
         method: "DELETE",
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete user");
-      }
-      return true;
+      if (!response.ok) throw new Error("Failed to delete user.");
+      return { success: true };
     } catch (error) {
       console.error("Error deleting user:", error);
-      throw error;
+      return { success: false, message: error.message };
     }
   }
 
-  async updateUser(uuid, name, email) {
+  async updateUser(userId, newName, newEmail) {
     try {
-      const response = await fetch(`${this.baseUrl}/users/${uuid}`, {
+      const response = await fetch(`${this.baseUrl}/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name: newName, email: newEmail }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update user");
       }
-      return true;
+      return { success: true };
     } catch (error) {
       console.error("Error updating user:", error);
-      throw error;
+      return { success: false, message: error.message };
     }
   }
 }
 
-// Use the dynamic API base URL from config.js
-export default new UserService(`${API_BASE_URL}/api`);
+export default new UserService(API_BASE_URL);
