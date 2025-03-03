@@ -158,8 +158,11 @@ async function saveUserEdits(row) {
     return;
   }
 
-  if (!/^[a-zA-Z\s]+$/.test(newName)) {
-    showNotification("Invalid name format!", NotificationType.ERROR);
+  if (!/^[a-zA-Z0-9\s]+$/.test(newName)) {
+    showNotification(
+      "Invalid name format! Only letters, numbers, and spaces are allowed.",
+      NotificationType.ERROR,
+    );
     return;
   }
 
