@@ -17,11 +17,11 @@ async function checkBackendHealth() {
   }
 }
 
-function toggleUserForm() {
-  const formContainer = document.getElementById("userFormContainer");
-  formContainer.style.display =
-    formContainer.style.display === "none" ? "block" : "none";
-}
+// function toggleUserForm() {
+//   const formContainer = document.getElementById("userFormContainer");
+//   formContainer.style.display =
+//     formContainer.style.display === "none" ? "block" : "none";
+// }
 
 function showNotification(
   message,
@@ -91,6 +91,7 @@ function closeOtherEdits() {
 }
 
 function toggleEditMode(row) {
+  closeOtherEdits();
   const nameCell = row.querySelector(".name-cell");
   const emailCell = row.querySelector(".email-cell");
   const editButton = row.querySelector(".edit-button");
@@ -225,55 +226,70 @@ async function renderUsers() {
                         <td class='email-cell'>${user.email}</td>
                         <td>
                             <div class="actions">
-                              <button class='edit-button'>✏️</button>
-                              <button class='save-button' style="display: none;">💾</button>
-                              <button class='delete-button'>🗑️</button>
+                                <button class='edit-button' data-mode="edit">✏️</button>
+                                <button class='save-button' data-mode="save" style="display: none;">💾</button>
+                                <button class='delete-button'>🗑️</button>
                             </div>
                         </td>
                     </tr>`,
                   )
                   .join("")}
+                <!-- New User Row -->
+                <tr id="new-user-row">
+                  <td><input type="text" id="new-name" placeholder="Enter name" style="width: 100%;"></td>
+                  <td><input type="text" id="new-email" placeholder="Enter email" style="width: 100%;"></td>
+                  <td>
+                      <div class="actions">
+                          <button id="add-user-button">➕ Add User</button>
+                      </div>
+                  </td>
+                </tr>
             </tbody>
         </table>`;
 }
 
-document
-  .getElementById("showUserForm")
-  .addEventListener("click", toggleUserForm);
+// document
+//   .getElementById("showUserForm")
+//   .addEventListener("click", toggleUserForm);
 
-document
-  .getElementById("cancelUserForm")
-  .addEventListener("click", toggleUserForm);
+// document
+//   .getElementById("cancelUserForm")
+//   .addEventListener("click", toggleUserForm);
 
-document
-  .getElementById("userForm")
-  .addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const nameInput = document.getElementById("name");
-    const emailInput = document.getElementById("email");
-    const messageDiv = document.getElementById("message");
-    try {
-      await UserService.addUser(nameInput.value, emailInput.value);
-      messageDiv.style.color = "green";
-      messageDiv.textContent = "User added successfully!";
-      nameInput.value = "";
-      emailInput.value = "";
-      document.getElementById("userFormContainer").style.display = "none"; // Hide form on success
-      renderUsers();
-    } catch (error) {
-      messageDiv.style.color = "red";
-      messageDiv.textContent = error.message;
-    }
-  });
+// document
+//   .getElementById("userForm")
+//   .addEventListener("submit", async (event) => {
+//     event.preventDefault();
+//     const nameInput = document.getElementById("name");
+//     const emailInput = document.getElementById("email");
+//     const messageDiv = document.getElementById("message");
+//     try {
+//       await UserService.addUser(nameInput.value, emailInput.value);
+//       messageDiv.style.color = "green";
+//       messageDiv.textContent = "User added successfully!";
+//       nameInput.value = "";
+//       emailInput.value = "";
+//       document.getElementById("userFormContainer").style.display = "none"; // Hide form on success
+//       renderUsers();
+//     } catch (error) {
+//       messageDiv.style.color = "red";
+//       messageDiv.textContent = error.message;
+//     }
+//   });
 
 document.addEventListener("DOMContentLoaded", () => {
   const userTable = document.getElementById("users");
 
-  // Double-click to enter edit mode
+  // Double-click to enter edit mode (EXCLUDES new user row)
   userTable.addEventListener("dblclick", (event) => {
-    let row = event.target.closest("tr"); // Get the row being double-clicked
-    if (row && row.classList.contains("user-row")) {
-      closeOtherEdits();
+    let row = event.target.closest("tr");
+
+    // Ensure it's a valid user row and NOT the new user input row
+    if (
+      row &&
+      row.classList.contains("user-row") &&
+      row.id !== "new-user-row"
+    ) {
       toggleEditMode(row);
     }
   });
@@ -284,7 +300,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!row) return;
 
     if (event.target.classList.contains("edit-button")) {
-      closeOtherEdits();
       toggleEditMode(row);
     }
 
@@ -296,18 +311,64 @@ document.addEventListener("DOMContentLoaded", () => {
       const userId = row.dataset.id;
       await handleDeleteUser(userId);
     }
-  });
-});
 
-// Click outside to close edit mode
-document.addEventListener("click", (event) => {
-  if (
-    !event.target.closest(".user-row.edit-mode") &&
-    !event.target.classList.contains("edit-button") &&
-    !event.target.classList.contains("save-button")
-  ) {
-    closeOtherEdits();
-  }
+    if (event.target.id === "add-user-button") {
+      const nameInput = document.getElementById("new-name");
+      const emailInput = document.getElementById("new-email");
+
+      const newName = nameInput.value.trim();
+      const newEmail = emailInput.value.trim();
+
+      if (!newName || !newEmail) {
+        showNotification(
+          "Name and email cannot be empty!",
+          NotificationType.ERROR,
+        );
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9\s]+$/.test(newName)) {
+        showNotification(
+          "Invalid name format! Only letters, numbers, and spaces are allowed.",
+          NotificationType.ERROR,
+        );
+        return;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        showNotification("Invalid email format!", NotificationType.ERROR);
+        return;
+      }
+
+      try {
+        await UserService.addUser(newName, newEmail);
+        showNotification("User added successfully!", NotificationType.SUCCESS);
+
+        // Clear input fields
+        nameInput.value = "";
+        emailInput.value = "";
+
+        // Refresh the table to show the new user
+        renderUsers();
+      } catch (error) {
+        showNotification(
+          "Error adding user: " + error.message,
+          NotificationType.ERROR,
+        );
+      }
+    }
+  });
+
+  // Click outside to close edit mode
+  document.addEventListener("click", (event) => {
+    if (
+      !event.target.closest(".user-row.edit-mode") &&
+      !event.target.classList.contains("edit-button") &&
+      !event.target.classList.contains("save-button")
+    ) {
+      closeOtherEdits();
+    }
+  });
 });
 
 checkBackendHealth();

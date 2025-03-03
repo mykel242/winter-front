@@ -204,3 +204,38 @@ tr.edit-mode {
     font-size: 18px;
     font-weight: bold;
 }
+
+/* Style for the new user row inputs */
+#new-user-row td {
+    padding: 5px; /* Reduce padding to match other rows */
+    border: 1px solid #ddd; /* Ensure consistency */
+}
+
+#new-user-row input {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Style the add user button inside the table */
+#add-user-button {
+    border: none;
+    background-color: #28a745; /* Green */
+    color: white;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+}
+
+#add-user-button:hover {
+    background-color: #218838;
+}
