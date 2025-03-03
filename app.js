@@ -263,13 +263,14 @@ async function renderUsers() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  checkBackendHealth();
+  renderUsers();
+
   const userTable = document.getElementById("users");
 
   // Double-click to enter edit mode (EXCLUDES new user row)
   userTable.addEventListener("dblclick", (event) => {
     let row = event.target.closest("tr");
-
-    // Ensure it's a valid user row and NOT the new user input row
     if (
       row &&
       row.classList.contains("user-row") &&
@@ -297,54 +298,9 @@ document.addEventListener("DOMContentLoaded", () => {
       await handleDeleteUser(userId);
     }
 
-    if (event.target.id === "add-user-button") {
-      const nameInput = document.getElementById("new-name");
-      const emailInput = document.getElementById("new-email");
-
-      const newName = nameInput.value.trim();
-      const newEmail = emailInput.value.trim();
-
-      if (!newName || !newEmail) {
-        showNotification(
-          "Name and email cannot be empty!",
-          NotificationType.ERROR,
-        );
-        return;
-      }
-
-      if (!/^[a-zA-Z0-9\s]+$/.test(newName)) {
-        showNotification(
-          "Invalid name format! Only letters, numbers, and spaces are allowed.",
-          NotificationType.ERROR,
-        );
-        return;
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-        showNotification("Invalid email format!", NotificationType.ERROR);
-        return;
-      }
-
-      try {
-        const result = await UserService.addUser(newName, newEmail);
-        if (!result.success) {
-          showNotification(result.message, "error", true);
-          return;
-        }
-        showNotification("User added successfully!", NotificationType.SUCCESS);
-
-        // Clear input fields
-        nameInput.value = "";
-        emailInput.value = "";
-
-        renderUsers();
-      } catch (error) {
-        showNotification(
-          "Error adding user: " + error.message,
-          NotificationType.ERROR,
-        );
-      }
-    }
+    // if (event.target.id === "add-user-button") {
+    //   addUserHandler();
+    // }
   });
 
   // Click outside to close edit mode
@@ -358,6 +314,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
-checkBackendHealth();
-renderUsers();
