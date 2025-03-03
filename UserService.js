@@ -25,14 +25,14 @@ class UserService {
       if (!Array.isArray(data))
         throw new Error("Invalid response format: Expected an array.");
 
-      return data;
+      return { success: true, data };
     } catch (error) {
       if (error.name === "AbortError") {
         console.warn("Fetch aborted: fetchUsers was canceled.");
-        return []; // Return an empty array if the request was canceled
+        return { success: false, message: "Request was canceled.", data: [] };
       }
       console.error("Error fetching users:", error);
-      return [];
+      return { success: false, message: error.message, data: [] };
     }
   }
 
@@ -42,14 +42,16 @@ class UserService {
         signal: this.createAbortSignal(),
       });
       if (!res.ok) throw new Error("User not found.");
-      return await res.json();
+
+      const data = await res.json();
+      return { success: true, data };
     } catch (error) {
       if (error.name === "AbortError") {
         console.warn("Fetch aborted: getUserById was canceled.");
-        return null;
+        return { success: false, message: "Request was canceled.", data: null };
       }
       console.error("Error fetching user:", error);
-      return null;
+      return { success: false, message: error.message, data: null };
     }
   }
 
@@ -64,7 +66,7 @@ class UserService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add user");
+        throw new Error(errorData.message || "Failed to add user.");
       }
       return { success: true };
     } catch (error) {
@@ -83,6 +85,7 @@ class UserService {
         method: "DELETE",
         signal: this.createAbortSignal(),
       });
+
       if (!response.ok) throw new Error("Failed to delete user.");
       return { success: true };
     } catch (error) {
@@ -106,7 +109,7 @@ class UserService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update user");
+        throw new Error(errorData.message || "Failed to update user.");
       }
       return { success: true };
     } catch (error) {

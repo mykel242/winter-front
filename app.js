@@ -170,7 +170,13 @@ async function saveUserEdits(row) {
   }
 
   try {
-    await UserService.updateUser(userId, newName, newEmail);
+    const result = await UserService.updateUser(userId, newName, newEmail);
+
+    if (!result.success) {
+      showNotification(result.message, NotificationType.ERROR, true);
+      return;
+    }
+
     nameCell.innerHTML = newName;
     emailCell.innerHTML = newEmail;
     row.classList.remove("edit-mode");
@@ -190,7 +196,11 @@ async function saveUserEdits(row) {
 
 async function handleDeleteUser(userId) {
   try {
-    await UserService.deleteUser(userId);
+    const result = await UserService.deleteUser(userId);
+    if (!result.success) {
+      showNotification(result.message, "error", true);
+      return;
+    }
     renderUsers();
     showNotification("User deleted successfully!", NotificationType.SUCCESS);
   } catch (error) {
@@ -202,47 +212,36 @@ async function handleDeleteUser(userId) {
 }
 
 async function renderUsers() {
-  const users = await UserService.fetchUsers();
   const usersTable = document.getElementById("users");
+  usersTable.innerHTML = `<tr><td colspan="3">Loading users...</td></tr>`; // Show loading text
 
-  usersTable.innerHTML = `
-        <table style="width: 100%; table-layout: auto;">
-            <thead>
-                <tr>
-                    <th style="width: 40%">Name</th>
-                    <th style="width: 40%">Email</th>
-                    <th style="width: 20%">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${users
-                  .map(
-                    (user) =>
-                      `<tr class="user-row" data-id="${user.uuid}">
-                        <td class='name-cell'>${user.name}</td>
-                        <td class='email-cell'>${user.email}</td>
-                        <td>
-                            <div class="actions">
-                                <button class='edit-button' data-mode="edit">✏️</button>
-                                <button class='save-button' data-mode="save" style="display: none;">💾</button>
-                                <button class='delete-button'>🗑️</button>
-                            </div>
-                        </td>
-                    </tr>`,
-                  )
-                  .join("")}
-                <!-- New User Row -->
-                <tr id="new-user-row">
-                  <td><input type="text" id="new-name" placeholder="Enter name" style="width: 100%;"></td>
-                  <td><input type="text" id="new-email" placeholder="Enter email" style="width: 100%;"></td>
-                  <td>
-                      <div class="actions">
-                          <button id="add-user-button">➕ Add User</button>
-                      </div>
-                  </td>
-                </tr>
-            </tbody>
-        </table>`;
+  const result = await UserService.fetchUsers();
+
+  if (!result.success) {
+    showNotification(result.message, "error", true);
+    usersTable.innerHTML = `<tr><td colspan="3">Error loading users.</td></tr>`;
+    return;
+  }
+
+  const users = result.data;
+  console.log("Users loaded:", users);
+
+  usersTable.innerHTML = users
+    .map(
+      (user) =>
+        `<tr class="user-row" data-id="${user.uuid}">
+          <td class='name-cell'>${user.name}</td>
+          <td class='email-cell'>${user.email}</td>
+          <td>
+              <div class="actions">
+                  <button class='edit-button' data-mode="edit">✏️</button>
+                  <button class='save-button' data-mode="save" style="display: none;">💾</button>
+                  <button class='delete-button'>🗑️</button>
+              </div>
+          </td>
+      </tr>`,
+    )
+    .join("");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -309,14 +308,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        await UserService.addUser(newName, newEmail);
+        const result = await UserService.addUser(newName, newEmail);
+        if (!result.success) {
+          showNotification(result.message, "error", true);
+          return;
+        }
         showNotification("User added successfully!", NotificationType.SUCCESS);
 
         // Clear input fields
         nameInput.value = "";
         emailInput.value = "";
 
-        // Refresh the table to show the new user
         renderUsers();
       } catch (error) {
         showNotification(
